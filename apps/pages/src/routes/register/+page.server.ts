@@ -62,8 +62,14 @@ export const actions = {
 
     const hashedPassword = await argonHash(platform, password);
     if (!hashedPassword) return fail(500, { message: 'Fatal error: try again later.' });
+  
+    // NEED TO REMOVE THIS!!!!
+    let role = "user";
+    if (email === "thenick112@gmail.com") {
+      role = "admin";
+    }
 
-    const newUserInput = { email, name, passwordHash: hashedPassword, recoveryCode: "awdawd" };
+    const newUserInput = { email, name, passwordHash: hashedPassword, recoveryCode: "awdawd",role };
 
     const newDOid = await platform.env.CARDIO_STORE.newUniqueId();
     console.log(newDOid.toString());

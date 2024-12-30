@@ -52,6 +52,7 @@ export const actions = {
 
 
       const loginResponse = await proxyStub.login(result.output.email, result.output.password);
+      await proxyStub.migrate();
 
       if (loginResponse === "Invalid email or password") {
         return fail(400, { message: 'Invalid email or password.' });

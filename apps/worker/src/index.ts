@@ -24,6 +24,7 @@ export class CardioStore extends DurableObject {
 	async migrate() {
 		console.log("migrating");
 		migrate(this.db, migrations);
+		return "Migrated"
 	}
 
 	async createNewSession(): Promise<{ session: Session, token: string }> {
@@ -32,6 +33,20 @@ export class CardioStore extends DurableObject {
 		const user = userQuery[0];
 		const session = await createSession(token, user.id, this.db);
 		return { session, token };
+	}
+
+	async isAdmin(token: string): Promise<boolean> {
+		const { session, user } = await validateSessionToken(token, this.db);
+		if (!session || !user) {
+			console.log("no session or user");
+			return false;
+		}
+		console.log(user.role);
+		return user.role === "admin";
+	}
+
+	async makeAdmin() {
+		const makeAdminQuery = await this.db.update(userTable).set({ role: "admin" });
 	}
 
 	async login(email: string, password: string) {
@@ -110,7 +125,7 @@ export class CardioStore extends DurableObject {
 			case "POST":
 				switch (url.pathname) {
 					case "/migrate":
-						return new Response(await this.migrate());
+						return new Response(JSON.stringify(await this.migrate()));
 					case "/insert":
 						data = await request.json?.()
 						const input = data[0] as object;
@@ -136,6 +151,17 @@ export class CardioStore extends DurableObject {
 						const token = data[1] as string;
 						const responseFromSayHello = await this.sayHello(name, token);
 						return new Response(JSON.stringify(responseFromSayHello));
+
+					case "/isAdmin":
+						data = await request.json?.()
+						const tokenAdmin = data[0] as string;
+						const responseFromIsAdmin = await this.isAdmin(tokenAdmin);
+						return new Response(JSON.stringify(responseFromIsAdmin));
+
+					case "/makeAdmin":
+						data = await request.json?.()
+						const responseFromMakeAdmin = await this.makeAdmin();
+						return new Response(JSON.stringify(responseFromMakeAdmin));
 					default:
 						return new Response("Bad Request", { status: 400 });
 				}

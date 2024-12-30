@@ -9,7 +9,8 @@ export const userTable = table("user", {
 	passwordHash: t.text("password_hash").notNull(),
 	emailVerified: t.integer("email_verified").notNull().default(0),
 	totpKey: t.blob("totp_key"),
-	recoveryCode: t.blob("recovery_code").notNull()
+	recoveryCode: t.blob("recovery_code").notNull(),
+	role: t.text("role").notNull().default("user"),
 });
 
 export const sessionTable = table("session", {
