@@ -36,7 +36,7 @@ export const actions = {
 
     const proxyStub = createDOProxy(stub, dev);
     await proxyStub.migrate();
-    const response = await proxyStub.insert({ email });
+    const response = await proxyStub.insert();
 		// TODO log the user in
 	}
 } satisfies Actions;

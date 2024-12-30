@@ -43,6 +43,10 @@ script_name = 'cardio_store'
 # [[kv_namespaces]]
 # binding = "MY_KV_NAMESPACE"
 # id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+[[kv_namespaces]]
+binding = "CARDIO_DO_LOGIN"
+id = "aa1c5ce0ec31434096926cbb32f6ba2c"
+
 
 # Bind a Queue producer. Use this binding to schedule an arbitrary task that may be processed later by a Queue consumer.
 # Docs: https://developers.cloudflare.com/pages/functions/bindings/#queue-producers
@@ -64,7 +68,6 @@ script_name = 'cardio_store'
 [[services]]
 binding = "PasswordHasher"
 service = "argon2"
-
 
 # To use different bindings for preview and production environments, follow the examples below.
 # When using environment-specific overrides for bindings, ALL bindings must be specified on a per-environment basis.

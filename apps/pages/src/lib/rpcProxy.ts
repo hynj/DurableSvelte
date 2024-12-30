@@ -42,7 +42,10 @@ export function createDOProxy(stub: DurableObjectStub, isDev: boolean) {
             method: "POST",
             body: JSON.stringify(args)
           });
-          return response.text();
+          const responseJson = await response.text();
+
+          console.log(responseJson);
+          return JSON.parse(responseJson);
         }
         return target[prop](...args);
       };

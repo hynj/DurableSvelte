@@ -22,8 +22,11 @@ enabled = true
 # - https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 # Note: Use secrets to store sensitive data.
 # - https://developers.cloudflare.com/workers/configuration/secrets/
-# [vars]
-# MY_VARIABLE = "production_value"
+[vars]
+WORKER_ENV = "production"
+# these will be used in production
+#vars = { WORKER_ENV = "production" }
+
 
 # Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare’s global network
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#workers-ai
@@ -60,6 +63,9 @@ enabled = true
 name = "CARDIO_STORE"
 class_name = "CardioStore"
 
+#durable_objects_bindings = [
+#	{ name = "CARDIO_STORE", class_name = "CardioStore" }
+#]
 # Durable Object migrations.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#migrations
 [[migrations]]
@@ -112,8 +118,22 @@ fallthrough = true
 # binding = "MY_SERVICE"
 # service = "my-service"
 
+[[services]]
+binding = "PasswordHasher"
+service = "argon2"
+
 # Bind a Vectorize index. Use to store and query vector embeddings for semantic search, classification and other vector search use-cases.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#vectorize-indexes
 # [[vectorize]]
 # binding = "MY_INDEX"
 # index_name = "my-index"
+#
+#
+[env.local]
+# these will be used only when --env=local
+[env.local.vars]
+WORKER_ENV = "local"
+
+[[env.local.durable_objects.bindings]]
+name = "CARDIO_STORE"
+class_name = "CardioStore"

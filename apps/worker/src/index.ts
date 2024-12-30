@@ -3,38 +3,101 @@ import { drizzle, DrizzleSqliteDODatabase } from 'drizzle-orm/durable-sqlite';
 import { migrate } from 'drizzle-orm/durable-sqlite/migrator';
 import migrations from './../drizzle/migrations';
 import { Session, userTable } from "./db/user-schema";
-import { createSession, generateSessionToken } from "./auth/sessions";
+import { createSession, generateSessionToken, validateSessionToken } from "./auth/sessions";
+import { argonHash, argonVerify } from "./auth/password-functions";
+import { RPCResponse } from "shared-types";
 
 export class CardioStore extends DurableObject {
 	storage: DurableObjectStorage;
 	db: DrizzleSqliteDODatabase<any>;
+	passwordHasher: Fetcher;
+	isDev = false;
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
+		this.passwordHasher = env.PasswordHasher;
+		this.isDev = (env.WORKER_ENV == "local");
 	}
-	 async migrate() {
-        migrate(this.db, migrations);
-    }
 
-	async createNewSession(): Promise<Session> {
+	async migrate() {
+		console.log("migrating");
+		migrate(this.db, migrations);
+	}
+
+	async createNewSession(): Promise<{ session: Session, token: string }> {
 		const token = generateSessionToken();
 		const userQuery = await this.db.select().from(userTable);
 		const user = userQuery[0];
 		const session = await createSession(token, user.id, this.db);
-		return session;
+		return { session, token };
 	}
 
-	async sayHello(name: string): Promise<string> {
-		return `Hello, ${name}!`;
+	async login(email: string, password: string) {
+		console.log(email);
+		const userQuery = await this.db.select().from(userTable);
+		const user = userQuery.find(u => u.email === email);
+		if (!user) {
+			return "Invalid email or password";
+		}
+		console.log(user.passwordHash);
+
+		const checkPassword = await argonVerify(this.isDev, this.passwordHasher, user.passwordHash, password);
+
+		if (!checkPassword) {
+			return "Invalid email or password";
+		}
+
+		const token = generateSessionToken();
+		const session = await createSession(token, user.id, this.db);
+		return { token, session }
+	}
+
+	async sayHello(name: string, token: string): Promise<RPCResponse> {
+		const { session, user } = await validateSessionToken(token, this.db);
+
+		if (!session || !user) {
+			return {
+				type: "error",
+				data: null,
+				error: "AUTH_FAILURE"
+			}
+		}
+
+		return {
+			type: "success",
+			data: `Hello, ${user.name}!`
+		}
 	}
 	async insert(user: typeof userTable.$inferInsert) {
-        await this.db.insert(userTable).values(user);
-    }
+		console.log("running insert");
+		// Check this is the first user
+		const userQuery = await this.db.select().from(userTable);
+		if (userQuery.length !== 0) {
+			return {
+				status: "error",
+				data: { message: "User already exists" }
+			};
+		}
+
+		// Insert the user
+		await this.db.insert(userTable).values(user);
+
+		// Create a new session for the user
+		const { session, token } = await this.createNewSession();
+		console.log(session);
+		console.log(token);
+
+		return {
+			status: "success",
+			data: { session, token }
+		};
+	}
 	async select() {
-        return this.db.select().from(userTable);
-    }
+		return this.db.select().from(userTable);
+	}
+
 
 	async fetch(request: Request): Promise<Response> {
 		const url = new URL(request.url);
@@ -50,10 +113,18 @@ export class CardioStore extends DurableObject {
 						return new Response(await this.migrate());
 					case "/insert":
 						data = await request.json?.()
-						console.log(data)
-						console.log(typeof data)
 						const input = data[0] as object;
-						return new Response(await this.insert(input));
+						const response = await this.insert(input);
+						console.log(response);
+						return new Response(JSON.stringify(response));
+					case "/login":
+						data = await request.json?.()
+						const email = data[0] as string;
+						const password = data[1] as string;
+						const responseFromLogin = await this.login(email, password);
+						console.log(responseFromLogin);
+						return new Response(JSON.stringify(responseFromLogin));
+
 					case "/select":
 						const x = await request.json?.()
 						return new Response(JSON.stringify(await this.select()));
@@ -62,7 +133,9 @@ export class CardioStore extends DurableObject {
 						console.log(data)
 						console.log(typeof data)
 						const name = data[0] as string;
-						return new Response(await this.sayHello(name));
+						const token = data[1] as string;
+						const responseFromSayHello = await this.sayHello(name, token);
+						return new Response(JSON.stringify(responseFromSayHello));
 					default:
 						return new Response("Bad Request", { status: 400 });
 				}

@@ -3,7 +3,8 @@
 
 interface Env {
   	CARDIO_STORE: DurableObjectNamespace<import("./src/index").CardioStore>;
-    PasswordHasher: DurableObjectNamespace<import("./src/index").PasswordHasher>;
+    PasswordHasher: Fetcher;
+    CARDIO_DO_LOGIN: KVNamespace;
 }
 
 declare global {
