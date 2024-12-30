@@ -29,6 +29,20 @@
       "when": 1735591798865,
       "tag": "0003_elite_bucky",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1735596342610,
+      "tag": "0004_swift_eternity",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1735598960994,
+      "tag": "0005_needy_husk",
+      "breakpoints": true
     }
   ]
 }

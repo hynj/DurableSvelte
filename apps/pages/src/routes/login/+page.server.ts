@@ -65,13 +65,13 @@ export const actions = {
 
       setSessionAndDurableCookie(event, token, doID, new Date(session.expiresAt))
 
-      redirect(307, "/coldstart");
 
     }
     catch (e) {
       console.log(e);
-      return fail(500, { message: 'Fatal error: try again later.' });
+      return fail(500, { message: 'Fatal error: try again later. {e}' });
     }
+    redirect(307, "/coldstart");
 
     return { success: true };
   }

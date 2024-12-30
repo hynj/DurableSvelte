@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.38.3",
-		"shared-types": "*"
+    "shared-types": "*",
+    "uuidv7": "^1.0.2"
   }
 }

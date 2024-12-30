@@ -6,6 +6,7 @@ import { Session, userTable } from "./db/user-schema";
 import { createSession, generateSessionToken, validateSessionToken } from "./auth/sessions";
 import { argonHash, argonVerify } from "./auth/password-functions";
 import { RPCResponse } from "shared-types";
+import { Note, notesTable } from "./db/notes";
 
 export class CardioStore extends DurableObject {
 	storage: DurableObjectStorage;
@@ -49,6 +50,57 @@ export class CardioStore extends DurableObject {
 		const makeAdminQuery = await this.db.update(userTable).set({ role: "admin" });
 	}
 
+	async getNotes(token: string): Promise<RPCResponse> {
+		const { session, user } = await validateSessionToken(token, this.db);
+
+		if (!session || !user) {
+			return {
+				type: "error",
+				data: null,
+				error: "AUTH_FAILURE"
+			}
+		}
+
+		const notes = await this.db.select().from(notesTable);
+		return {
+			type: "success",
+			data: notes
+		}
+	}
+
+	async insertNote(name: string, content: string, token: string): Promise<RPCResponse> {
+		const { session, user } = await validateSessionToken(token, this.db);
+
+		if (!session || !user) {
+			return {
+				type: "error",
+				data: null,
+				error: "AUTH_FAILURE"
+			}
+		}
+
+		if (!name || !content) {
+			return {
+				type: "error",
+				data: null,
+				error: "AUTH_FAILURE"
+			}
+		}
+
+		const mockNote= {
+			name,
+			content,
+		} as Note
+
+		await this.db.insert(notesTable).values(mockNote);
+
+		return {
+			type: "success",
+			data: null
+		}
+	}
+
+
 	async login(email: string, password: string) {
 		console.log(email);
 		const userQuery = await this.db.select().from(userTable);
@@ -58,6 +110,7 @@ export class CardioStore extends DurableObject {
 		}
 		console.log(user.passwordHash);
 
+		console.log(`Is DEV: ${this.isDev}`);
 		const checkPassword = await argonVerify(this.isDev, this.passwordHasher, user.passwordHash, password);
 
 		if (!checkPassword) {
@@ -162,6 +215,22 @@ export class CardioStore extends DurableObject {
 						data = await request.json?.()
 						const responseFromMakeAdmin = await this.makeAdmin();
 						return new Response(JSON.stringify(responseFromMakeAdmin));
+
+					case "/getNotes":
+						data = await request.json?.()
+						const tokenNotes = data[0] as string;
+						const responseFromGetNotes = await this.getNotes(tokenNotes);
+						return new Response(JSON.stringify(responseFromGetNotes));
+
+					case "/insertNote":
+						{
+							data = await request.json?.()
+							const name = data[0] as string;
+							const content = data[1] as string;
+							const tokenInsertNote = data[2] as string;
+							const responseFromInsertNote = await this.insertNote(name, content, tokenInsertNote);
+							return new Response(JSON.stringify(responseFromInsertNote));
+						}
 					default:
 						return new Response("Bad Request", { status: 400 });
 				}

@@ -3,8 +3,6 @@ import {dev} from '$app/environment';
 import { createDOProxy } from "$lib/rpcProxy";
 
 export const load = async (event) => {
- 
-  
   const token = event.cookies.get("session") ?? null;
   const doID = event.cookies.get("durable") ?? null;
 
