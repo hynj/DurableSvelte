@@ -24,3 +24,4 @@ export const notesTable = table("notes", {
 
 export type Note = InferSelectModel<typeof notesTable>;
 
+

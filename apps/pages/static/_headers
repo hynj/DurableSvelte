@@ -1,0 +1,26 @@
+/_app/immutable/*
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+  Why-wont: thisWork
+
+/_app/immutable/chunks/*
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+
+/_app/immutable/workers/*
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+
+https://local.cardiolog.pages.dev/
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Custom-Header: this
+  X-Robots-Tag: noindex
+
+/_app/*
+  X-Robots-Tag: noindex
+	Cache-Control: no-cache
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+

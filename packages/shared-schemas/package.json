@@ -1,0 +1,19 @@
+{
+  "name": "shared-schemas",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc"
+  },
+  "exports": {
+    "./notes": {
+      "types": "./src/notes.ts",
+      "default": "./dist/notes.js"
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "drizzle-orm": "^0.38.3",
+        "uuidv7": "^1.0.2"
+  }
+}
